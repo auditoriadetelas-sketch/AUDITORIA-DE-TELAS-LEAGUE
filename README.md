@@ -103,6 +103,21 @@ border:1px solid #ccc
 </table>
 <button class="add" onclick="addDefecto()">➕ Añadir defecto</button>
 
+<h2>📏 Anchos por Rollo</h2>
+<table>
+<thead>
+<tr>
+<th>Rollo</th>
+<th>Ancho 1</th>
+<th>Ancho 2</th>
+<th>Ancho 3</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="anchos"></tbody>
+</table>
+<button class="add" onclick="addAncho()">➕ Añadir Anchos</button>
+
 <h2>🧪 Pruebas Adicionales</h2>
 <div class="form-header">
 <div><label>MATCH<select id="MATCH"><option>N/A</option><option>Aceptable</option><option>Rechazado</option></select></label></div>
@@ -144,6 +159,17 @@ document.getElementById("defectos").appendChild(tr);
 tr.querySelectorAll("input,select").forEach(i=>i.oninput=calc);
 }
 
+function addAncho(){
+const tr=document.createElement("tr");
+tr.innerHTML=`
+<td><input></td>
+<td><input type="number"></td>
+<td><input type="number"></td>
+<td><input type="number"></td>
+<td><button class="del" onclick="this.closest('tr').remove()">X</button></td>`;
+document.getElementById("anchos").appendChild(tr);
+}
+
 function calc(){
 let tL=0,tR=0,tP=0;
 const map={};
@@ -176,23 +202,25 @@ rateGlobal.textContent=(tR?((tP*36)/tR).toFixed(2):0);
 }
 
 function exportar(){
+const fecha=new Date().toISOString().slice(0,10);
 const wb=XLSX.utils.book_new();
 
-/* ---------- ROLLOS ---------- */
+/* ROLLOS */
 const headers=[
+"FECHA",
 "Auditor","Proveedor","Lote","Part Number","Part Color",
 "Total Yds Label","Total Yds Reales","% Faltante",
 "Puntos Globales","Rate Global",
 "MATCH","STRETCH","HANDFEEL","PILLING","BRUSHING",
 "# Rollo","Yds Label","Yds Reales","Ancho Std","Ancho Real","Puntos","Rate","Obs"
 ];
-
 const data=[headers];
-const rollos=[...document.querySelectorAll("#rollos tr")];
 
+const rollos=[...document.querySelectorAll("#rollos tr")];
 if(rollos.length){
 const tr=rollos[0];
 data.push([
+fecha,
 aud.value,prov.value,lote.value,pn.value,color.value,
 tLabel.textContent,tReal.textContent,pctFalt.textContent,
 tPuntos.textContent,rateGlobal.textContent,
@@ -209,7 +237,9 @@ tr.querySelector("textarea").value
 }
 
 rollos.slice(1).forEach(tr=>{
-data.push(["","","","","","","","","","","","","","","",
+data.push([
+"",
+"","","","","","","","","","","","","","","",
 tr.querySelector(".r").value,
 tr.querySelector(".l").value,
 tr.querySelector(".re").value,
@@ -223,7 +253,7 @@ tr.querySelector("textarea").value
 
 XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),"Rollos");
 
-/* ---------- DEFECTOS ---------- */
+/* DEFECTOS */
 const dData=[["Rollo","Cantidad","Puntos","Código Defecto"]];
 document.querySelectorAll("#defectos tr").forEach(tr=>{
 dData.push([
@@ -235,7 +265,7 @@ tr.querySelector(".cod").value
 });
 XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dData),"Defectos");
 
-XLSX.writeFile(wb,`${lote.value||"auditoria"}.xlsx`);
+XLSX.writeFile(wb,`${lote.value||"auditoria"}_${fecha}.xlsx`);
 }
 </script>
 
