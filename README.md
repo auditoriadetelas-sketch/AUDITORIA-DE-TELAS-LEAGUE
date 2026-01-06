@@ -1,4 +1,4 @@
-
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -172,6 +172,7 @@ document.getElementById("anchos").appendChild(tr);
 
 function calc(){
 let tL=0,tR=0,tP=0;
+let anchoMin=Infinity;
 const map={};
 
 document.querySelectorAll("#defectos tr").forEach(tr=>{
@@ -188,7 +189,10 @@ const l=+tr.querySelector(".l").value||0;
 const re=+tr.querySelector(".re").value||0;
 const ar=+tr.querySelector(".ar").value||0;
 
-tL+=l; tR+=re;
+tL+=l; 
+tR+=re;
+if(ar && ar<anchoMin) anchoMin=ar;
+
 const pts=map[r]||0;
 tr.querySelector(".p").value=pts;
 tr.querySelector(".rate").value=(re&&ar)?((pts*36)/(re*ar)*100).toFixed(2):0;
@@ -198,17 +202,18 @@ tLabel.textContent=tL.toFixed(2);
 tReal.textContent=tR.toFixed(2);
 pctFalt.textContent=tL?(((tR/tL-1)*100).toFixed(2)+"%"):"0%";
 tPuntos.textContent=tP.toFixed(2);
-rateGlobal.textContent=(tR?((tP*36)/tR).toFixed(2):0);
+
+rateGlobal.textContent=(tR && anchoMin<Infinity)
+?((tP*36)/(tR*anchoMin)*100).toFixed(2)
+:0;
 }
 
 function exportar(){
-const fecha=new Date().toISOString().slice(0,10);
 const wb=XLSX.utils.book_new();
 
 /* ROLLOS */
 const headers=[
-"FECHA",
-"Auditor","Proveedor","Lote","Part Number","Part Color",
+"Fecha","Auditor","Proveedor","Lote","Part Number","Part Color",
 "Total Yds Label","Total Yds Reales","% Faltante",
 "Puntos Globales","Rate Global",
 "MATCH","STRETCH","HANDFEEL","PILLING","BRUSHING",
@@ -216,12 +221,13 @@ const headers=[
 ];
 const data=[headers];
 
+const fecha=new Date().toLocaleDateString("es-ES");
 const rollos=[...document.querySelectorAll("#rollos tr")];
+
 if(rollos.length){
 const tr=rollos[0];
 data.push([
-fecha,
-aud.value,prov.value,lote.value,pn.value,color.value,
+fecha,aud.value,prov.value,lote.value,pn.value,color.value,
 tLabel.textContent,tReal.textContent,pctFalt.textContent,
 tPuntos.textContent,rateGlobal.textContent,
 MATCH.value,STRETCH.value,HANDFEEL.value,PILLING.value,BRUSHING.value,
@@ -237,9 +243,7 @@ tr.querySelector("textarea").value
 }
 
 rollos.slice(1).forEach(tr=>{
-data.push([
-"",
-"","","","","","","","","","","","","","","",
+data.push(["","","","","","","","","","","","","","","","",
 tr.querySelector(".r").value,
 tr.querySelector(".l").value,
 tr.querySelector(".re").value,
@@ -265,7 +269,7 @@ tr.querySelector(".cod").value
 });
 XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dData),"Defectos");
 
-XLSX.writeFile(wb,`${lote.value||"auditoria"}_${fecha}.xlsx`);
+XLSX.writeFile(wb,`${lote.value||"auditoria"}.xlsx`);
 }
 </script>
 
