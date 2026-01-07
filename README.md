@@ -162,7 +162,7 @@ tr.querySelectorAll("input,select").forEach(i=>i.oninput=calc);
 function addAncho(){
 const tr=document.createElement("tr");
 tr.innerHTML=`
-<td><input></td>
+<td><input class="arollo"></td>
 <td><input type="number"></td>
 <td><input type="number"></td>
 <td><input type="number"></td>
@@ -175,6 +175,7 @@ let tL=0,tR=0,tP=0;
 let anchoMin=Infinity;
 const map={};
 
+/* DEFECTOS */
 document.querySelectorAll("#defectos tr").forEach(tr=>{
 const r=tr.querySelector(".dr").value;
 const c=+tr.querySelector(".dc").value||0;
@@ -183,29 +184,37 @@ if(r) map[r]=(map[r]||0)+(c*p);
 tP+=c*p;
 });
 
+/* ROLLOS */
 document.querySelectorAll("#rollos tr").forEach(tr=>{
 const r=tr.querySelector(".r").value;
 const l=+tr.querySelector(".l").value||0;
 const re=+tr.querySelector(".re").value||0;
 const ar=+tr.querySelector(".ar").value||0;
 
-tL+=l; 
+tL+=l;
 tR+=re;
+
 if(ar && ar<anchoMin) anchoMin=ar;
 
 const pts=map[r]||0;
 tr.querySelector(".p").value=pts;
-tr.querySelector(".rate").value=(re&&ar)?((pts*36)/(re*ar)*100).toFixed(2):0;
+
+tr.querySelector(".rate").value =
+(re && ar)
+? ((pts*36)/(re*ar)*100).toFixed(2)
+: 0;
 });
 
+/* TOTALES */
 tLabel.textContent=tL.toFixed(2);
 tReal.textContent=tR.toFixed(2);
 pctFalt.textContent=tL?(((tR/tL-1)*100).toFixed(2)+"%"):"0%";
 tPuntos.textContent=tP.toFixed(2);
 
-rateGlobal.textContent=(tR && anchoMin<Infinity)
-?((tP*36)/(tR*anchoMin)*100).toFixed(2)
-:0;
+rateGlobal.textContent =
+(tR && anchoMin<Infinity)
+? ((tP*36)/(tR*anchoMin)*100).toFixed(2)
+: 0;
 }
 
 function exportar(){
@@ -214,36 +223,35 @@ const wb=XLSX.utils.book_new();
 /* ROLLOS */
 const headers=[
 "Fecha","Auditor","Proveedor","Lote","Part Number","Part Color",
+"Total Rollos","Total Yardas",
 "Total Yds Label","Total Yds Reales","% Faltante",
 "Puntos Globales","Rate Global",
 "MATCH","STRETCH","HANDFEEL","PILLING","BRUSHING",
 "# Rollo","Yds Label","Yds Reales","Ancho Std","Ancho Real","Puntos","Rate","Obs"
 ];
 const data=[headers];
-
 const fecha=new Date().toLocaleDateString("es-ES");
-const rollos=[...document.querySelectorAll("#rollos tr")];
 
-if(rollos.length){
-const tr=rollos[0];
+document.querySelectorAll("#rollos tr").forEach((tr,i)=>{
 data.push([
-fecha,aud.value,prov.value,lote.value,pn.value,color.value,
-tLabel.textContent,tReal.textContent,pctFalt.textContent,
-tPuntos.textContent,rateGlobal.textContent,
-MATCH.value,STRETCH.value,HANDFEEL.value,PILLING.value,BRUSHING.value,
-tr.querySelector(".r").value,
-tr.querySelector(".l").value,
-tr.querySelector(".re").value,
-tr.querySelector(".as").value,
-tr.querySelector(".ar").value,
-tr.querySelector(".p").value,
-tr.querySelector(".rate").value,
-tr.querySelector("textarea").value
-]);
-}
-
-rollos.slice(1).forEach(tr=>{
-data.push(["","","","","","","","","","","","","","","","",
+i===0?fecha:"",
+i===0?aud.value:"",
+i===0?prov.value:"",
+i===0?lote.value:"",
+i===0?pn.value:"",
+i===0?color.value:"",
+i===0?trollos.value:"",
+i===0?tyardas.value:"",
+i===0?tLabel.textContent:"",
+i===0?tReal.textContent:"",
+i===0?pctFalt.textContent:"",
+i===0?tPuntos.textContent:"",
+i===0?rateGlobal.textContent:"",
+i===0?MATCH.value:"",
+i===0?STRETCH.value:"",
+i===0?HANDFEEL.value:"",
+i===0?PILLING.value:"",
+i===0?BRUSHING.value:"",
 tr.querySelector(".r").value,
 tr.querySelector(".l").value,
 tr.querySelector(".re").value,
@@ -254,7 +262,6 @@ tr.querySelector(".rate").value,
 tr.querySelector("textarea").value
 ]);
 });
-
 XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),"Rollos");
 
 /* DEFECTOS */
@@ -268,6 +275,18 @@ tr.querySelector(".cod").value
 ]);
 });
 XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dData),"Defectos");
+
+/* ANCHOS */
+const aData=[["Rollo","Ancho 1","Ancho 2","Ancho 3"]];
+document.querySelectorAll("#anchos tr").forEach(tr=>{
+aData.push([
+tr.querySelector(".arollo").value,
+tr.children[1].querySelector("input").value,
+tr.children[2].querySelector("input").value,
+tr.children[3].querySelector("input").value
+]);
+});
+XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aData),"Anchos");
 
 XLSX.writeFile(wb,`${lote.value||"auditoria"}.xlsx`);
 }
