@@ -27,6 +27,10 @@ padding:15px;
 border-radius:6px;
 border:1px solid #ccc
 }
+.status{
+font-weight:bold;
+padding:6px;
+}
 </style>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -59,6 +63,17 @@ border:1px solid #ccc
 
 <div><label>Total Rollos<input id="trollos" type="number"></label></div>
 <div><label>Total Yardas<input id="tyardas" type="number"></label></div>
+
+<div>
+<label>Estatus de Auditoría
+<select id="estatus" class="status">
+<option value="">Seleccione</option>
+<option>APROBADO</option>
+<option>RECHAZADO</option>
+<option>PENDIENTE DE CERTIFICAR</option>
+</select>
+</label>
+</div>
 </div>
 
 <h2>🧵 Rollos</h2>
@@ -94,7 +109,7 @@ border:1px solid #ccc
 <tr>
 <th>Rollo</th>
 <th>Cantidad</th>
-<th>Puntos (1–4)</th>
+<th>Puntos</th>
 <th>Código Defecto</th>
 <th></th>
 </tr>
@@ -175,7 +190,6 @@ let tL=0,tR=0,tP=0;
 let anchoMin=Infinity;
 const map={};
 
-/* DEFECTOS */
 document.querySelectorAll("#defectos tr").forEach(tr=>{
 const r=tr.querySelector(".dr").value;
 const c=+tr.querySelector(".dc").value||0;
@@ -184,7 +198,6 @@ if(r) map[r]=(map[r]||0)+(c*p);
 tP+=c*p;
 });
 
-/* ROLLOS */
 document.querySelectorAll("#rollos tr").forEach(tr=>{
 const r=tr.querySelector(".r").value;
 const l=+tr.querySelector(".l").value||0;
@@ -193,37 +206,27 @@ const ar=+tr.querySelector(".ar").value||0;
 
 tL+=l;
 tR+=re;
-
 if(ar && ar<anchoMin) anchoMin=ar;
 
 const pts=map[r]||0;
 tr.querySelector(".p").value=pts;
-
 tr.querySelector(".rate").value =
-(re && ar)
-? ((pts*36)/(re*ar)*100).toFixed(2)
-: 0;
+(re && ar)?((pts*36)/(re*ar)*100).toFixed(2):0;
 });
 
-/* TOTALES */
 tLabel.textContent=tL.toFixed(2);
 tReal.textContent=tR.toFixed(2);
 pctFalt.textContent=tL?(((tR/tL-1)*100).toFixed(2)+"%"):"0%";
 tPuntos.textContent=tP.toFixed(2);
-
 rateGlobal.textContent =
-(tR && anchoMin<Infinity)
-? ((tP*36)/(tR*anchoMin)*100).toFixed(2)
-: 0;
+(tR && anchoMin<Infinity)?((tP*36)/(tR*anchoMin)*100).toFixed(2):0;
 }
 
 function exportar(){
 const wb=XLSX.utils.book_new();
-
-/* ROLLOS */
 const headers=[
 "Fecha","Auditor","Proveedor","Lote","Part Number","Part Color",
-"Total Rollos","Total Yardas",
+"Total Rollos","Total Yardas","Estatus Auditoría",
 "Total Yds Label","Total Yds Reales","% Faltante",
 "Puntos Globales","Rate Global",
 "MATCH","STRETCH","HANDFEEL","PILLING","BRUSHING",
@@ -242,6 +245,7 @@ i===0?pn.value:"",
 i===0?color.value:"",
 i===0?trollos.value:"",
 i===0?tyardas.value:"",
+i===0?estatus.value:"",
 i===0?tLabel.textContent:"",
 i===0?tReal.textContent:"",
 i===0?pctFalt.textContent:"",
@@ -264,7 +268,6 @@ tr.querySelector("textarea").value
 });
 XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),"Rollos");
 
-/* DEFECTOS */
 const dData=[["Rollo","Cantidad","Puntos","Código Defecto"]];
 document.querySelectorAll("#defectos tr").forEach(tr=>{
 dData.push([
@@ -276,7 +279,6 @@ tr.querySelector(".cod").value
 });
 XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dData),"Defectos");
 
-/* ANCHOS */
 const aData=[["Rollo","Ancho 1","Ancho 2","Ancho 3"]];
 document.querySelectorAll("#anchos tr").forEach(tr=>{
 aData.push([
