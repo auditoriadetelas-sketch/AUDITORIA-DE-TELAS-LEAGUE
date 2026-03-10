@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Sistema de Auditoría de Tela | Calidad</title>
+
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-hover: #1e3a8a;
+            --secondary: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 2rem 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--secondary);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .flex-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .box span {
+            display: block;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        button {
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .add { background: var(--primary); color: white; margin-bottom: 20px; }
+        .del { background: #fee2e2; color: var(--danger); }
+
+        .btn-export {
+            background: var(--success);
+            color: white;
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .status-aprobado { background-color: #dcfce7 !important; color: #166534 !important; }
+        .status-rechazado { background-color: #fee2e2 !important; color: #991b1b !important; }
+        .status-pendiente { background-color: #fef9c3 !important; color: #854d0e !important; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>📋 Información General de Auditoría</h2>
+    <div class="form-header">
+        <div><label>Lote</label><input id="lote" placeholder="Ej: 873106-0"></div>
+        <div><label>Part Number</label><input id="pn" placeholder="Código de tela"></div>
+        <div><label>Color</label><input id="color" placeholder="Nombre del color"></div>
+
+        <div><label>Proveedor</label>
+            <select id="prov">
+                <option value="">Seleccione</option>
+                <option>INNOV TEXTILES</option>
+                <option>TEXPASA</option>
+                <option>RAYONES</option>
+                <option>NUEVO MUNDO</option>
+            </select>
+        </div>
+
+        <div><label>Auditor</label>
+            <select id="aud">
+                <option value="">Seleccione</option>
+                <option>RENE RODRIGUEZ</option>
+                <option>EZEQUIEL RIVERA</option>
+                <option>FELIPE BETANCOURT</option>
+                <option>SONIA CONTRERAS</option>
+            </select>
+        </div>
+
+        <div><label>Total Rollos</label><input id="trollos" type="number"></div>
+        <div><label>Total Yardas</label><input id="tyardas" type="number"></div>
+
+        <div><label>Estatus de Auditoría</label>
+            <select id="estatus" onchange="updateStatusColor(this)">
+                <option value="">Seleccione</option>
+                <option value="APROBADO">APROBADO</option>
+                <option value="RECHAZADO">RECHAZADO</option>
+                <option value="PENDIENTE DE CERTIFICAR">PENDIENTE</option>
+            </select>
+        </div>
+    </div>
+
+    <h2>🧵 Detalle de Rollos</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th># Rollo</th>
+                    <th>Yds Label</th>
+                    <th>Yds Reales</th>
+                    <th>Ancho Std</th>
+                    <th>Ancho Real</th>
+                    <th>Puntos</th>
+                    <th>Rate</th>
+                    <th>Observaciones</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="rollos"></tbody>
+        </table>
+    </div>
+    <button class="add" onclick="addRollo()">➕ Añadir Rollo</button>
+
+    <div class="flex-stats">
+        <div class="box"><label>Total Yds Label</label><span id="tLabel">0</span></div>
+        <div class="box"><label>Total Yds Reales</label><span id="tReal">0</span></div>
+        <div class="box"><label>% Faltante</label><span id="pctFalt">0%</span></div>
+        <div class="box"><label>Puntos Global</label><span id="tPuntos">0</span></div>
+        <div class="box"><label>Rate Global</label><span id="rateGlobal">0</span></div>
+    </div>
+
+    <h2>🚫 Defectos</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th># Rollo</th>
+                    <th>Cantidad Defectos</th>
+                    <th>Puntos (1-4)</th>
+                    <th>Código / Descripción</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="defectos"></tbody>
+        </table>
+    </div>
+    <button class="add" onclick="addDefecto()">➕ Añadir Defecto</button>
+
+    <h2>📏 Control de Anchos</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th># Rollo</th>
+                    <th>Medida 1</th>
+                    <th>Medida 2</th>
+                    <th>Medida 3</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="anchos"></tbody>
+        </table>
+    </div>
+    <button class="add" onclick="addAncho()">➕ Añadir Anchos</button>
+
+    <h2>🧪 Pruebas de Calidad</h2>
+    <div class="form-header">
+        <div><label>Match Color</label><select id="MATCH"><option>N/A</option><option>Aceptable</option><option>Rechazado</option></select></div>
+        <div><label>Stretch</label><select id="STRETCH"><option>N/A</option><option>Aceptable</option><option>Rechazado</option></select></div>
+        <div><label>Handfeel</label><select id="HANDFEEL"><option>N/A</option><option>Aceptable</option><option>Rechazado</option></select></div>
+        <div><label>Pilling</label><select id="PILLING"><option>N/A</option><option>Aceptable</option><option>Rechazado</option></select></div>
+        <div><label>Brushing</label><select id="BRUSHING"><option>N/A</option><option>Aceptable</option><option>Rechazado</option></select></div>
+    </div>
+
+    <button class="btn-export" onclick="exportar()">💾 EXPORTAR REPORTE COMPLETO A EXCEL (.XLSX)</button>
+</div>
+
+<script>
+function updateStatusColor(el) {
+    el.className = '';
+    if(el.value === "APROBADO") el.classList.add('status-aprobado');
+    if(el.value === "RECHAZADO") el.classList.add('status-rechazado');
+    if(el.value === "PENDIENTE DE CERTIFICAR") el.classList.add('status-pendiente');
+}
+
+function addRollo(){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+        <td><input class="r" placeholder="001"></td>
+        <td><input class="l" type="number" step="0.01"></td>
+        <td><input class="re" type="number" step="0.01"></td>
+        <td><input class="as" type="number"></td>
+        <td><input class="ar" type="number"></td>
+        <td><input class="p" readonly style="background:#f8fafc"></td>
+        <td><input class="rate" readonly style="background:#f8fafc"></td>
+        <td><textarea rows="1"></textarea></td>
+        <td><button class="del" onclick="this.closest('tr').remove();calc()">X</button></td>`;
+    document.getElementById("rollos").appendChild(tr);
+    tr.querySelectorAll("input").forEach(i=>i.oninput=calc);
+}
+
+function addDefecto(){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+        <td><input class="dr" placeholder="#"></td>
+        <td><input class="dc" type="number"></td>
+        <td><select class="dp"><option>1</option><option>2</option><option>3</option><option>4</option></select></td>
+        <td><input class="cod" placeholder="Ej: Mancha"></td>
+        <td><button class="del" onclick="this.closest('tr').remove();calc()">X</button></td>`;
+    document.getElementById("defectos").appendChild(tr);
+    tr.querySelectorAll("input,select").forEach(i=>i.oninput=calc);
+}
+
+function addAncho(){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+        <td><input class="arollo" placeholder="#"></td>
+        <td><input type="number" step="0.1" class="a1"></td>
+        <td><input type="number" step="0.1" class="a2"></td>
+        <td><input type="number" step="0.1" class="a3"></td>
+        <td><button class="del" onclick="this.closest('tr').remove()">X</button></td>`;
+    document.getElementById("anchos").appendChild(tr);
+}
+
+function calc(){
+    let tL=0, tR=0, tP=0;
+    let anchoMin=Infinity;
+    const map={};
+
+    document.querySelectorAll("#defectos tr").forEach(tr=>{
+        const r=tr.querySelector(".dr").value;
+        const c=+tr.querySelector(".dc").value||0;
+        const p=+tr.querySelector(".dp").value||0;
+        if(r) map[r]=(map[r]||0)+(c*p);
+        tP+=c*p;
+    });
+
+    document.querySelectorAll("#rollos tr").forEach(tr=>{
+        const r=tr.querySelector(".r").value;
+        const l=+tr.querySelector(".l").value||0;
+        const re=+tr.querySelector(".re").value||0;
+        const ar=+tr.querySelector(".ar").value||0;
+
+        tL+=l; tR+=re;
+        if(ar && ar<anchoMin) anchoMin=ar;
+
+        const pts=map[r]||0;
+        tr.querySelector(".p").value=pts;
+        tr.querySelector(".rate").value = (re && ar)?((pts*36)/(re*ar)*100).toFixed(2):0;
+    });
+
+    document.getElementById('tLabel').textContent=tL.toFixed(2);
+    document.getElementById('tReal').textContent=tR.toFixed(2);
+    document.getElementById('pctFalt').textContent=tL?(((tR/tL-1)*100).toFixed(2)+"%"):"0%";
+    document.getElementById('tPuntos').textContent=tP.toFixed(2);
+    
+    let rg = (tR && anchoMin<Infinity)?((tP*36)/(tR*anchoMin)*100).toFixed(2):0;
+    const rateEl = document.getElementById('rateGlobal');
+    rateEl.textContent = rg;
+    rateEl.style.color = parseFloat(rg) > 28 ? "var(--danger)" : "var(--primary)";
+}
+
+function exportar(){
+    const wb=XLSX.utils.book_new();
+    const fecha=new Date().toLocaleDateString("es-ES");
+
+    // 1. PESTAÑA RESUMEN (Con nombres completos)
+    const headers=[
+        "Fecha Auditoría","Nombre Auditor","Proveedor","Número Lote","Part Number","Color de Tela",
+        "Total Rollos Declarados","Total Yardas Declaradas","Estatus de Auditoría",
+        "Total Yardas Label","Total Yardas Reales","Porcentaje Faltante",
+        "Puntos Globales","Rate Global Penalización",
+        "Prueba Match","Prueba Stretch","Prueba Handfeel","Prueba Pilling","Prueba Brushing",
+        "Número de Rollo","Yardas Label","Yardas Reales","Ancho Estándar","Ancho Real","Puntos del Rollo","Rate del Rollo","Observaciones"
+    ];
+    const data=[headers];
+
+    document.querySelectorAll("#rollos tr").forEach((tr,i)=>{
+        data.push([
+            i===0?fecha:"", i===0?aud.value:"", i===0?prov.value:"", i===0?lote.value:"", i===0?pn.value:"", i===0?color.value:"",
+            i===0?trollos.value:"", i===0?tyardas.value:"", i===0?estatus.value:"",
+            i===0?tLabel.textContent:"", i===0?tReal.textContent:"", i===0?pctFalt.textContent:"",
+            i===0?tPuntos.textContent:"", i===0?rateGlobal.textContent:"",
+            i===0?MATCH.value:"", i===0?STRETCH.value:"", i===0?HANDFEEL.value:"", i===0?PILLING.value:"", i===0?BRUSHING.value:"",
+            tr.querySelector(".r").value, tr.querySelector(".l").value, tr.querySelector(".re").value,
+            tr.querySelector(".as").value, tr.querySelector(".ar").value, tr.querySelector(".p").value,
+            tr.querySelector(".rate").value, tr.querySelector("textarea").value
+        ]);
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),"Resumen de Auditoría");
+
+    // 2. PESTAÑA DEFECTOS
+    const dData=[["Número de Rollo","Cantidad de Defectos","Puntos Asignados","Código/Descripción del Defecto"]];
+    document.querySelectorAll("#defectos tr").forEach(tr=>{
+        dData.push([tr.querySelector(".dr").value, tr.querySelector(".dc").value, tr.querySelector(".dp").value, tr.querySelector(".cod").value]);
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dData),"Detalle de Defectos");
+
+    // 3. PESTAÑA ANCHOS (NUEVA)
+    const aData=[["Número de Rollo","Medida de Ancho 1","Medida de Ancho 2","Medida de Ancho 3"]];
+    document.querySelectorAll("#anchos tr").forEach(tr=>{
+        aData.push([
+            tr.querySelector(".arollo").value,
+            tr.querySelector(".a1").value,
+            tr.querySelector(".a2").value,
+            tr.querySelector(".a3").value
+        ]);
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aData),"Control de Anchos");
+
+    XLSX.writeFile(wb,`Reporte_Auditoria_${lote.value||"General"}.xlsx`);
+}
+
+addRollo();
+</script>
+</body>
+</html>
