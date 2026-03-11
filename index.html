@@ -301,7 +301,7 @@ function addDefecto(){
         <td><input class="dr" placeholder="#"></td>
         <td><input class="dc" type="number"></td>
         <td><select class="dp"><option>1</option><option>2</option><option>3</option><option>4</option></select></td>
-        <td><input class="cod" placeholder="Ej: Mancha"></td>
+        <td><input class="cod" placeholder=></td>
         <td><button class="del" onclick="this.closest('tr').remove();calc()">X</button></td>`;
     document.getElementById("defectos").appendChild(tr);
     tr.querySelectorAll("input,select").forEach(i=>i.oninput=calc);
